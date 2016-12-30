@@ -6,13 +6,15 @@ using UnityEngine;
 public class Spawn : MonoBehaviour
 {
     public const int NUM_NODES = 10; //Number of nodes
-    public float xmax = 10.0f; //Max distance from origin at x axis
-    public float ymax = 10.0f; //Max distance from origin at y axis
+    public float xmax = 20.0f; //Max distance from origin at x axis
+    public float ymax = 20.0f; //Max distance from origin at y axis
     public float min_dis = 3.0f; //Min distance between nodes
-    private int next_node = 1; //Index for next avilable node
+    private int next_node = 0; //Index for next avilable node
 
     Vector3[] nodes = new Vector3[NUM_NODES];
+    LineRenderer[] edges = new LineRenderer[NUM_NODES * 4];
     public GameObject node;
+
 
     //Create a random node
     public Vector3 random_node()
@@ -27,65 +29,58 @@ public class Spawn : MonoBehaviour
         return next_node;
     }
 
-    //Check if given vector3 overlaps any other node
+    //Create a random edge between 2 nodes
+    public void create_edge(int i)
+    {
+        //LineRenderer edge = new LineRenderer();
+        edges[i] = gameObject.AddComponent<LineRenderer>();
+        Vector3 point1 = new Vector3();
+        Vector3 point2 = new Vector3();
+        
+        point1 = nodes[0];
+        point2 = nodes[1];
+
+        edges[i].SetPosition(0, point1);
+        edges[i].SetPosition(1, point2);
+        Instantiate(edges[i]);
+    }
+
+    //Check if randomly created Vector3 overlaps any other node
     public void check_overlap()
     {
         Vector3 randy = random_node();
+        //iterate over all existing nodes
         for(int i = 0; i < NUM_NODES; i++)
         {
             float dist = Vector3.Distance(nodes[i], randy);
             if (dist <= min_dis)
             {
+                //if overlap, generate new node and iterate from beginning
                 i = 0;
                 randy = random_node();
             }
         }
-
+        //add node to array
         nodes[next_node] = randy;
         next_node += 1;
         Debug.Log("Node created");
+        return;
     }
     
-        //Check each existing node for overlap
-    //    for (int i = 0; i < NUM_NODES; i++)
-    //    {
-    //        float dist = Vector3.Distance((nodes[i]), (next_node));
-    //        //if proposed node is too close to another node, create new node and start iterating from index 0
-    //        if (dist <= min_dis)
-    //        {
-    //            i = 0;
-    //            xpos = Random.Range(0, xmax);
-    //            ypos = Random.Range(0, ymax);
-    //            next_node = new Vector3(xpos, ypos, 0);
-    //            Debug.Log("Overlap");
-    //        }
-    //    }
-    //    nodes[nodes.GetUpperBound(0)] = next_node;
-    //    Debug.Log("Success. Returning valid node");
-    //    return next_node;
-    //}
-       
-  
 
 	// Use this for initialization
 	void Start ()
     {
-        //foreach(Vector3 item in nodes)
-        //{
-        //    Debug.Log(nodes[0]);
-        //}
-        
-        //Create first node at origin
-        nodes[0] = new Vector3(0, 0, 0);
-        Instantiate(node, nodes[0], Quaternion.identity);
-        Debug.Log("Initial node");
 
         //Create a valid node 
-        for (int j = 1; j < 10; j++)
+        for (int j = 0; j < 3; j++)
         {
             check_overlap();
             Instantiate(node, nodes[j], Quaternion.identity);
+            Debug.Log("Node created");
+            create_edge(j);
         }
+        //create_edge();
     }
 
 }
