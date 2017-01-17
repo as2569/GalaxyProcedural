@@ -6,10 +6,10 @@ using UnityEngine;
 public class Spawn : MonoBehaviour
 {
     public const int NUM_NODES = 16; //Number of nodes
-    public float xmax = 20.0f; //Max distance from origin at x axis
-    public float ymax = 20.0f; //Max distance from origin at y axis
+    public float xmax = 20.0f; //Max distance from origin at X axis
+    public float ymax = 20.0f; //Max distance from origin at Y axis
     public float min_dis = 3.0f; //Min distance between nodes
-    private int next_node_index = 1; //Index for next avilable node
+    private int next_node_index = 1; //Index for next available node
     private int next_edge_index = 1; //Index for next edge
 
     Vector3[] nodes = new Vector3[NUM_NODES];
@@ -59,6 +59,7 @@ public class Spawn : MonoBehaviour
     public void add_node()
     {
         Vector3 randy = random_node();
+
         //iterate over all existing nodes
         for(int i = 0; i < NUM_NODES; i++)
         {
@@ -70,6 +71,7 @@ public class Spawn : MonoBehaviour
                 randy = random_node();
             }
         }
+
         //add node to array
         nodes[next_node_index] = randy;
         next_node_index += 1;
@@ -100,16 +102,19 @@ public class Spawn : MonoBehaviour
         Instantiate(node, nodes[0], Quaternion.identity);
         Debug.Log("Initial node");
 
+
         //Create a valid node 
-        for (int j = 0; j < 5; j++)
-        {
-            add_node();
-            add_edge();
-            Instantiate(node, nodes[j], Quaternion.identity);
-            Debug.Log("Node instantiated");
-            Instantiate(edges[j]);
-            Debug.Log("Edge instantiated");
-        }
+        //TEST
+        //for (int j = 0; j < 4; j++)
+        //{
+
+        //    add_node();
+        //    add_edge();
+        //    Instantiate(node, nodes[j], Quaternion.identity);
+        //    Debug.Log("Node instantiated");
+        //    Instantiate(edges[j]);
+        //    Debug.Log("Edge instantiated");
+        //}+
     }
 
 }
