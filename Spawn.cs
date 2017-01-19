@@ -8,6 +8,7 @@ public class Node
 {
     public Vector3 position;
     public GameObject gameObject;
+    public List<float> distances;
 }
 
 [System.Serializable]
@@ -24,15 +25,13 @@ public class Spawn : MonoBehaviour
     public float xmax = 20.0f; //Max distance from origin at X axis
     public float ymax = 20.0f; //Max distance from origin at Y axis
     public float min_dis = 3.0f; //Min distance between nodes
-    //private int next_node_index = 1; //Index for next available node
-    //private int next_edge_index = 1; //Index for next edge
-
     List<Node> nodes = new List<Node>();
     List<Edge> edges = new List<Edge>();
     public GameObject nodePrefab;
     public GameObject edgePrefab;
 
-    //Create a random node
+    //Create a random Vector for node
+    //Check if proposed node would be within min distance
     public Vector3 RandomNode()
     {
         //Random values within max distance
@@ -54,18 +53,9 @@ public class Spawn : MonoBehaviour
         return next_node;
     }
 
-    
-
-    public void GenerateEdges()
-    {
-        for (int i = 1; i < nodes.Count; i++)
-        {
-            AddEdge(nodes[i - 1], nodes[i]);
-        }
-    }
-
-    //Add an gameobject with linerenderer to array
-    //DOES NOT check for collision 
+    //Create a new object Type Edge 
+    //Instantiate as edgePrefab
+    //Render a lineRenderer 
     public void AddEdge(Node A, Node B)
     {
         Edge e = new Edge();
@@ -75,11 +65,18 @@ public class Spawn : MonoBehaviour
         LineRenderer r = e.gameObject.GetComponent<LineRenderer>();
         r.SetPosition(0, A.position);
         r.SetPosition(1, B.position);
-        //Debug.Log("Edge added at index " + next_edge_index);
         edges.Add(e);
         return;
     }
 
+    //Generate new edges
+    public void GenerateEdges()
+    {
+        for (int i = 1; i < nodes.Count; i++)
+        {
+            AddEdge(nodes[i - 1], nodes[i]);
+        }
+    }
     //Add a new node to nodes array
     //Check for overlap 
     public void AddNode()
@@ -95,25 +92,47 @@ public class Spawn : MonoBehaviour
         n.position = randy;
         n.gameObject = nObj;
         nodes.Add(n);
-        Debug.Log("Node added at index" + (nodes.Count -1));
+        Debug.Log("Node added at index " + (nodes.Count - 1));
+        
         return;
     }
-    
+
+    //calculate a distance to every node
+    public List<float> DistancesToNodes(Node thisNode)
+    {
+        List<float> dis = new List<float>();
+        foreach (Node otherNode in nodes)
+        {
+            dis.Add(Vector3.Distance(thisNode.position, otherNode.position));
+        }
+
+        return dis;
+    }
+
 	// Use this for initialization
 	void Start ()
     {
+        //Create initial node
         AddNode();
         
-        //Create a valid node 
-        //TEST
-        for (int j = 0; j <= numNodes; j++)
+        //Create nodes 
+        for (int j = 0; j < numNodes; j++)
         {
             AddNode();
             Debug.Log("Node instantiated");
-            //Instantiate(edges[j]);
-            //Debug.Log("Edge instantiated");
         }
+
         GenerateEdges();
+
+        //print distances
+        foreach (Node x in nodes)
+        {
+            x.distances = DistancesToNodes(x);
+            foreach (float f in x.distances)
+            {
+                print(f);
+            }
+        }
     }
 
 }
