@@ -3,21 +3,37 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class Node
+{
+    public Vector3 position;
+    public GameObject gameObject;
+}
+
+[System.Serializable]
+public class Edge
+{
+    public Node A;
+    public Node B;
+    public GameObject gameObject;
+}
+
 public class Spawn : MonoBehaviour
 {
-    public const int NUM_NODES = 16; //Number of nodes
+    public int numNodes = 16; //Number of nodes
     public float xmax = 20.0f; //Max distance from origin at X axis
     public float ymax = 20.0f; //Max distance from origin at Y axis
     public float min_dis = 3.0f; //Min distance between nodes
-    private int next_node_index = 1; //Index for next available node
-    private int next_edge_index = 1; //Index for next edge
+    //private int next_node_index = 1; //Index for next available node
+    //private int next_edge_index = 1; //Index for next edge
 
-    Vector3[] nodes = new Vector3[NUM_NODES];
-    GameObject[] edges = new GameObject[NUM_NODES];
-    public GameObject node;
+    List<Node> nodes = new List<Node>();
+    List<Edge> edges = new List<Edge>();
+    public GameObject nodePrefab;
+    public GameObject edgePrefab;
 
     //Create a random node
-    public Vector3 random_node()
+    public Vector3 RandomNode()
     {
         //Random values within max distance
         float xpos = Random.Range(0, xmax);
@@ -26,95 +42,78 @@ public class Spawn : MonoBehaviour
         //Proposed node
         Vector3 next_node;
         next_node = new Vector3(xpos, ypos, 0);
+        foreach(Node n in nodes)
+        {
+            float dist = Vector3.Distance(n.position, next_node);
+            if (dist <= min_dis)
+            {
+                //if overlap, generate new node and iterate from beginning
+                return Vector3.zero;
+            }
+        }
         return next_node;
     }
 
-    //Create a random edge between 2 nodes
-    public GameObject random_edge()
+    
+
+    public void GenerateEdges()
     {
-        GameObject new_edge = new GameObject();
-        LineRenderer line_rend = new_edge.AddComponent<LineRenderer>();
-
-        //lineRenderers vertices, beginning and end of line
-        Vector3 point1 = new Vector3();
-        Vector3 point2 = new Vector3();
-        point1 = nodes[next_node_index - 1];
-        point2 = nodes[next_node_index];
-
-        line_rend.SetPosition(0, point1);
-        line_rend.SetPosition(1, point2);
-        return new_edge;  
+        for (int i = 1; i < nodes.Count; i++)
+        {
+            AddEdge(nodes[i - 1], nodes[i]);
+        }
     }
 
-    public void add_edge()
+    //Add an gameobject with linerenderer to array
+    //DOES NOT check for collision 
+    public void AddEdge(Node A, Node B)
     {
-        edges[next_node_index] = random_edge();
-        next_edge_index += 1;
-        Debug.Log("Edge created");
+        Edge e = new Edge();
+        e.A = A;
+        e.B = B;
+        e.gameObject = Instantiate<GameObject>(edgePrefab);
+        LineRenderer r = e.gameObject.GetComponent<LineRenderer>();
+        r.SetPosition(0, A.position);
+        r.SetPosition(1, B.position);
+        //Debug.Log("Edge added at index " + next_edge_index);
+        edges.Add(e);
         return;
     }
 
     //Add a new node to nodes array
     //Check for overlap 
-    public void add_node()
+    public void AddNode()
     {
-        Vector3 randy = random_node();
-
-        //iterate over all existing nodes
-        for(int i = 0; i < NUM_NODES; i++)
-        {
-            float dist = Vector3.Distance(nodes[i], randy);
-            if (dist <= min_dis)
-            {
-                //if overlap, generate new node and iterate from beginning
-                i = 0;
-                randy = random_node();
-            }
-        }
+        Vector3 randy;
+        
+        while((randy = RandomNode()) == Vector3.zero);
 
         //add node to array
-        nodes[next_node_index] = randy;
-        next_node_index += 1;
-        Debug.Log("Node created");
+        GameObject nObj = Instantiate<GameObject>(nodePrefab);
+        Node n = new Node();
+        nObj.transform.position = randy;
+        n.position = randy;
+        n.gameObject = nObj;
+        nodes.Add(n);
+        Debug.Log("Node added at index" + (nodes.Count -1));
         return;
     }
     
-
 	// Use this for initialization
 	void Start ()
     {
-        //temp test node
-        nodes[13] = new Vector3(5, 5, 0);
-        Instantiate(node, nodes[13], Quaternion.identity);
-        Debug.Log("t1");
-
-        nodes[14] = new Vector3(10, 10, 0);
-        Instantiate(node, nodes[14], Quaternion.identity);
-        Debug.Log("t2");
-
-        nodes[15] = new Vector3(15, 15, 0);
-        Instantiate(node, nodes[15], Quaternion.identity);
-        Debug.Log("t3");
-
-
-        //Create node at index 0
-        nodes[0] = new Vector3(0, 0, 0);
-        Instantiate(node, nodes[0], Quaternion.identity);
-        Debug.Log("Initial node");
-
-
+        AddNode();
+        
         //Create a valid node 
         //TEST
-        //for (int j = 0; j < 4; j++)
-        //{
-
-        //    add_node();
-        //    add_edge();
-        //    Instantiate(node, nodes[j], Quaternion.identity);
-        //    Debug.Log("Node instantiated");
-        //    Instantiate(edges[j]);
-        //    Debug.Log("Edge instantiated");
-        //}+
+        for (int j = 0; j <= numNodes; j++)
+        {
+            AddNode();
+            Debug.Log("Node instantiated");
+            //Instantiate(edges[j]);
+            //Debug.Log("Edge instantiated");
+        }
+        GenerateEdges();
     }
 
 }
